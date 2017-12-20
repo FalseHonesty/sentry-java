@@ -3,8 +3,6 @@ package io.sentry.connection;
 import io.sentry.buffer.Buffer;
 import io.sentry.environment.SentryEnvironment;
 import io.sentry.event.Event;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.Iterator;
@@ -30,8 +28,6 @@ import java.util.concurrent.TimeUnit;
  * of CompletableFutures, though that would require changing the existing API regardless.
  */
 public class BufferedConnection implements Connection {
-
-    private static final Logger logger = LoggerFactory.getLogger(BufferedConnection.class);
 
     /**
      * Shutdown hook used to stop the buffered connection properly when the JVM quits.
@@ -117,7 +113,6 @@ public class BufferedConnection implements Connection {
             shutDownHook.enabled = false;
         }
 
-        logger.debug("Gracefully shutting down Sentry buffer threads.");
         closed = true;
         executorService.shutdown();
         try {
@@ -128,19 +123,13 @@ public class BufferedConnection implements Connection {
                     if (executorService.awaitTermination(waitBetweenLoggingMs, TimeUnit.MILLISECONDS)) {
                         break;
                     }
-                    logger.debug("Still waiting on buffer flusher executor to terminate.");
                 }
             } else if (!executorService.awaitTermination(shutdownTimeout, TimeUnit.MILLISECONDS)) {
-                logger.warn("Graceful shutdown took too much time, forcing the shutdown.");
                 List<Runnable> tasks = executorService.shutdownNow();
-                logger.warn("{} tasks failed to execute before the shutdown.", tasks.size());
             }
-            logger.debug("Shutdown finished.");
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            logger.warn("Graceful shutdown interrupted, forcing the shutdown.");
             List<Runnable> tasks = executorService.shutdownNow();
-            logger.warn("{} tasks failed to execute before the shutdown.", tasks.size());
         } finally {
             actualConnection.close();
         }
@@ -167,8 +156,7 @@ public class BufferedConnection implements Connection {
                 try {
                     // buffer before we attempt to send
                     buffer.add(event);
-                } catch (Exception e) {
-                    logger.error("Exception occurred while attempting to add Event to buffer: ", e);
+                } catch (Exception ignored) {
                 }
 
                 wrappedConnection.send(event);
@@ -203,8 +191,6 @@ public class BufferedConnection implements Connection {
 
         @Override
         public void run() {
-            logger.trace("Running Flusher");
-
             SentryEnvironment.startManagingThread();
             try {
                 Iterator<Event> events = buffer.getEvents();
@@ -222,25 +208,17 @@ public class BufferedConnection implements Connection {
                     long eventTime = event.getTimestamp().getTime();
                     long age = now - eventTime;
                     if (age < minAgeMillis) {
-                        logger.trace("Ignoring buffered event because it only " + age + "ms old.");
                         return;
                     }
 
                     try {
-                        logger.trace("Flusher attempting to send Event: " + event.getId());
                         send(event);
-                        logger.trace("Flusher successfully sent Event: " + event.getId());
                     } catch (Exception e) {
-                        logger.debug("Flusher failed to send Event: " + event.getId(), e);
-
-                        // Connectivity issues, give up until next Flusher run.
-                        logger.trace("Flusher run exiting early.");
                         return;
                     }
                 }
-                logger.trace("Flusher run exiting, no more events to send.");
-            } catch (Exception e) {
-                logger.error("Error running Flusher: ", e);
+            } catch (Exception ignored) {
+
             } finally {
                 SentryEnvironment.stopManagingThread();
             }
@@ -264,8 +242,7 @@ public class BufferedConnection implements Connection {
             try {
                 // The current thread is managed by sentry
                 BufferedConnection.this.close();
-            } catch (Exception e) {
-                logger.error("An exception occurred while closing the connection.", e);
+            } catch (Exception ignored) {
             } finally {
                 SentryEnvironment.stopManagingThread();
             }

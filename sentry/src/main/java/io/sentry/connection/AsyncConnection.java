@@ -3,8 +3,6 @@ package io.sentry.connection;
 import io.sentry.SentryClient;
 import io.sentry.environment.SentryEnvironment;
 import io.sentry.event.Event;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.List;
@@ -19,10 +17,6 @@ import java.util.concurrent.TimeUnit;
  * and submit the event.
  */
 public class AsyncConnection implements Connection {
-    private static final Logger logger = LoggerFactory.getLogger(AsyncConnection.class);
-    // CHECKSTYLE.OFF: ConstantName
-    private static final Logger lockdownLogger = LoggerFactory.getLogger(SentryClient.class.getName() + ".lockdown");
-    // CHECKSTYLE.ON: ConstantName
     /**
      * Timeout of the {@link #executorService}, in milliseconds.
      */
@@ -123,7 +117,6 @@ public class AsyncConnection implements Connection {
      */
     @SuppressWarnings("checkstyle:magicnumber")
     private void doClose() throws IOException {
-        logger.debug("Gracefully shutting down Sentry async threads.");
         closed = true;
         executorService.shutdown();
         try {
@@ -134,19 +127,13 @@ public class AsyncConnection implements Connection {
                     if (executorService.awaitTermination(waitBetweenLoggingMs, TimeUnit.MILLISECONDS)) {
                         break;
                     }
-                    logger.debug("Still waiting on async executor to terminate.");
                 }
             } else if (!executorService.awaitTermination(shutdownTimeout, TimeUnit.MILLISECONDS)) {
-                logger.warn("Graceful shutdown took too much time, forcing the shutdown.");
                 List<Runnable> tasks = executorService.shutdownNow();
-                logger.warn("{} tasks failed to execute before shutdown.", tasks.size());
             }
-            logger.debug("Shutdown finished.");
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            logger.warn("Graceful shutdown interrupted, forcing the shutdown.");
             List<Runnable> tasks = executorService.shutdownNow();
-            logger.warn("{} tasks failed to execute before shutdown.", tasks.size());
         } finally {
             actualConnection.close();
         }
@@ -169,10 +156,7 @@ public class AsyncConnection implements Connection {
             try {
                 // The current thread is managed by sentry
                 actualConnection.send(event);
-            } catch (LockedDownException e) {
-                lockdownLogger.warn("The connection to Sentry is currently locked down.", e);
-            } catch (Exception e) {
-                logger.error("An exception occurred while sending the event to Sentry.", e);
+            } catch (Exception ignored) {
             } finally {
                 SentryEnvironment.stopManagingThread();
             }
@@ -196,8 +180,7 @@ public class AsyncConnection implements Connection {
             try {
                 // The current thread is managed by sentry
                 AsyncConnection.this.doClose();
-            } catch (Exception e) {
-                logger.error("An exception occurred while closing the connection.", e);
+            } catch (Exception ignored) {
             } finally {
                 SentryEnvironment.stopManagingThread();
             }

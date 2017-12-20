@@ -6,8 +6,6 @@ import io.sentry.event.Breadcrumb;
 import io.sentry.event.Event;
 import io.sentry.event.EventBuilder;
 import io.sentry.event.User;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -15,7 +13,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * Sentry provides easy access to a statically stored {@link SentryClient} instance.
  */
 public final class Sentry {
-    private static final Logger logger = LoggerFactory.getLogger(Sentry.class);
     /**
      * The most recently constructed {@link SentryClient} instance, used by static helper
      * methods like {@link Sentry#capture(Event)}.
@@ -128,10 +125,6 @@ public final class Sentry {
      * @param client {@link SentryClient} instance to store.
      */
     public static void setStoredClient(SentryClient client) {
-        if (storedClient != null) {
-            logger.warn("Overwriting statically stored SentryClient instance {} with {}.",
-                storedClient, client);
-        }
         storedClient = client;
     }
 

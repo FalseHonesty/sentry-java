@@ -8,8 +8,6 @@ import io.sentry.event.Sdk;
 import io.sentry.event.interfaces.SentryInterface;
 import io.sentry.marshaller.Marshaller;
 import io.sentry.util.Util;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -120,7 +118,6 @@ public class JsonMarshaller implements Marshaller {
         }
     };
 
-    private static final Logger logger = LoggerFactory.getLogger(JsonMarshaller.class);
     private final JsonFactory jsonFactory = new JsonFactory();
     private final Map<Class<? extends SentryInterface>, InterfaceBinding<?>> interfaceBindings = new HashMap<>();
     /**
@@ -159,13 +156,13 @@ public class JsonMarshaller implements Marshaller {
 
         try (JsonGenerator generator = createJsonGenerator(destination)) {
             writeContent(generator, event);
-        } catch (IOException e) {
-            logger.error("An exception occurred while serialising the event.", e);
+        } catch (IOException ignored) {
+
         } finally {
             try {
                 destination.close();
-            } catch (IOException e) {
-                logger.error("An exception occurred while serialising the event.", e);
+            } catch (IOException ignored) {
+
             }
         }
     }
@@ -231,9 +228,6 @@ public class JsonMarshaller implements Marshaller {
             if (interfaceBindings.containsKey(sentryInterface.getClass())) {
                 generator.writeFieldName(interfaceEntry.getKey());
                 getInterfaceBinding(sentryInterface).writeInterface(generator, interfaceEntry.getValue());
-            } else {
-                logger.error("Couldn't parse the content of '{}' provided in {}.",
-                    interfaceEntry.getKey(), sentryInterface);
             }
         }
     }
@@ -372,8 +366,6 @@ public class JsonMarshaller implements Marshaller {
             case ERROR:
                 return "error";
             default:
-                logger.error("The level '{}' isn't supported, this should NEVER happen, contact Sentry developers",
-                    level.name());
                 return null;
         }
     }

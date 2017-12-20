@@ -2,8 +2,6 @@ package io.sentry.connection;
 
 import io.sentry.environment.SentryEnvironment;
 import io.sentry.event.Event;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -20,7 +18,6 @@ public abstract class AbstractConnection implements Connection {
      * Current Sentry protocol version.
      */
     public static final String SENTRY_PROTOCOL_VERSION = "6";
-    private static final Logger logger = LoggerFactory.getLogger(AbstractConnection.class);
     /**
      * Value of the X-Sentry-Auth header.
      */
@@ -73,9 +70,7 @@ public abstract class AbstractConnection implements Connection {
             for (EventSendCallback eventSendCallback : eventSendCallbacks) {
                 try {
                     eventSendCallback.onSuccess(event);
-                } catch (Exception exc) {
-                    logger.warn("An exception occurred while running an EventSendCallback.onSuccess: "
-                        + eventSendCallback.getClass().getName(), exc);
+                } catch (Exception ignored) {
                 }
             }
 
@@ -84,13 +79,10 @@ public abstract class AbstractConnection implements Connection {
             for (EventSendCallback eventSendCallback : eventSendCallbacks) {
                 try {
                     eventSendCallback.onFailure(event, e);
-                } catch (Exception exc) {
-                    logger.warn("An exception occurred while running an EventSendCallback.onFailure: "
-                        + eventSendCallback.getClass().getName(), exc);
+                } catch (Exception ignored) {
                 }
             }
 
-            logger.warn("An exception due to the connection occurred, a lockdown will be initiated.", e);
             lockdownManager.setState(e);
 
             throw e;

@@ -2,8 +2,6 @@ package io.sentry.servlet;
 
 import io.sentry.Sentry;
 import io.sentry.SentryClient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletRequestEvent;
@@ -16,8 +14,6 @@ import javax.servlet.http.HttpServletRequest;
  * in the event sent to Sentry.
  */
 public class SentryServletRequestListener implements ServletRequestListener {
-    private static final Logger logger = LoggerFactory.getLogger(SentryServletRequestListener.class);
-
     private static final ThreadLocal<HttpServletRequest> THREAD_REQUEST = new ThreadLocal<>();
 
     public static HttpServletRequest getServletRequest() {
@@ -33,8 +29,8 @@ public class SentryServletRequestListener implements ServletRequestListener {
             if (sentryClient != null) {
                 sentryClient.clearContext();
             }
-        } catch (Exception e) {
-            logger.error("Error clearing Context state.", e);
+        } catch (Exception ignored) {
+
         }
     }
 

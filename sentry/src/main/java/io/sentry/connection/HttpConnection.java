@@ -3,8 +3,6 @@ package io.sentry.connection;
 import io.sentry.environment.SentryEnvironment;
 import io.sentry.event.Event;
 import io.sentry.marshaller.Marshaller;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
@@ -25,7 +23,6 @@ import java.util.concurrent.TimeUnit;
  */
 public class HttpConnection extends AbstractConnection {
     private static final Charset UTF_8 = Charset.forName("UTF-8");
-    private static final Logger logger = LoggerFactory.getLogger(HttpConnection.class);
     /**
      * HTTP Header for the user agent.
      */
@@ -159,7 +156,6 @@ public class HttpConnection extends AbstractConnection {
             try {
                 int responseCode = connection.getResponseCode();
                 if (responseCode == HttpURLConnection.HTTP_FORBIDDEN) {
-                    logger.debug("Event '" + event.getId() + "' was rejected by the Sentry server due to a filter.");
                     return;
                 }
             } catch (IOException responseCodeException) {
@@ -209,8 +205,8 @@ public class HttpConnection extends AbstractConnection {
                 sb.append(line);
                 first = false;
             }
-        } catch (Exception e2) {
-            logger.error("Exception while reading the error message from the connection.", e2);
+        } catch (Exception ignored) {
+
         }
         return sb.toString();
     }

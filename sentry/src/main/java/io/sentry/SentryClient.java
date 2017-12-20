@@ -11,8 +11,6 @@ import io.sentry.event.helper.EventBuilderHelper;
 import io.sentry.event.helper.ShouldSendEventCallback;
 import io.sentry.event.interfaces.ExceptionInterface;
 import io.sentry.util.Util;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.*;
@@ -25,10 +23,6 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * {@link SentryClientFactory#createSentryClient(io.sentry.dsn.Dsn)}, which will use the best factory available.
  */
 public class SentryClient {
-    private static final Logger logger = LoggerFactory.getLogger(SentryClient.class);
-    // CHECKSTYLE.OFF: ConstantName
-    private static final Logger lockdownLogger = LoggerFactory.getLogger(SentryClient.class.getName() + ".lockdown");
-    // CHECKSTYLE.ON: ConstantName
     /**
      * Identifies the version of the application.
      * <p>
@@ -125,17 +119,12 @@ public class SentryClient {
     public void sendEvent(Event event) {
         for (ShouldSendEventCallback shouldSendEventCallback : shouldSendEventCallbacks) {
             if (!shouldSendEventCallback.shouldSend(event)) {
-                logger.trace("Not sending Event because of ShouldSendEventCallback: {}", shouldSendEventCallback);
                 return;
             }
         }
 
         try {
             connection.send(event);
-        } catch (LockedDownException e) {
-            lockdownLogger.warn("The connection to Sentry is currently locked down.", e);
-        } catch (Exception e) {
-            logger.error("An exception occurred while sending the event to Sentry.", e);
         } finally {
             getContext().setLastEventId(event.getId());
         }
@@ -208,7 +197,6 @@ public class SentryClient {
      * @param builderHelper builder helper to remove.
      */
     public void removeBuilderHelper(EventBuilderHelper builderHelper) {
-        logger.debug("Removing '{}' from the list of builder helpers.", builderHelper);
         builderHelpers.remove(builderHelper);
     }
 
@@ -218,7 +206,6 @@ public class SentryClient {
      * @param builderHelper builder helper to add.
      */
     public void addBuilderHelper(EventBuilderHelper builderHelper) {
-        logger.debug("Adding '{}' to the list of builder helpers.", builderHelper);
         builderHelpers.add(builderHelper);
     }
 

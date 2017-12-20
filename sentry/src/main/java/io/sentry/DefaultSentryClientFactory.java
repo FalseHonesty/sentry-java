@@ -14,8 +14,6 @@ import io.sentry.jvmti.FrameCache;
 import io.sentry.marshaller.Marshaller;
 import io.sentry.marshaller.json.*;
 import io.sentry.util.Util;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.net.InetSocketAddress;
@@ -220,7 +218,6 @@ public class DefaultSentryClientFactory extends SentryClientFactory {
      */
     public static final String UNCAUGHT_HANDLER_ENABLED_OPTION = "uncaught.handler.enabled";
 
-    private static final Logger logger = LoggerFactory.getLogger(DefaultSentryClientFactory.class);
     private static final String FALSE = Boolean.FALSE.toString();
 
     private static final Map<String, RejectedExecutionHandler> REJECT_EXECUTION_HANDLERS = new HashMap<>();
@@ -240,8 +237,6 @@ public class DefaultSentryClientFactory extends SentryClientFactory {
             Class.forName("javax.servlet.ServletRequestListener", false, this.getClass().getClassLoader());
             sentryClient.addBuilderHelper(new HttpEventBuilderHelper());
         } catch (ClassNotFoundException e) {
-            logger.debug("The current environment doesn't provide access to servlets,"
-                + " or provides an unsupported version.");
         }
         sentryClient.addBuilderHelper(new ContextBuilderHelper(sentryClient));
         return configureSentryClient(sentryClient, dsn);
@@ -318,13 +313,10 @@ public class DefaultSentryClientFactory extends SentryClientFactory {
         Connection connection;
 
         if (protocol.equalsIgnoreCase("http") || protocol.equalsIgnoreCase("https")) {
-            logger.debug("Using an {} connection to Sentry.", protocol.toUpperCase());
             connection = createHttpConnection(dsn);
         } else if (protocol.equalsIgnoreCase("out")) {
-            logger.debug("Using StdOut to send events.");
             connection = createStdOutConnection(dsn);
         } else if (protocol.equalsIgnoreCase("noop")) {
-            logger.debug("Using noop to send events.");
             connection = new NoopConnection();
         } else {
             throw new IllegalStateException("Couldn't create a connection for the protocol '" + protocol + "'");
@@ -516,9 +508,6 @@ public class DefaultSentryClientFactory extends SentryClientFactory {
         if (Util.isNullOrEmpty(inAppFramesOption)) {
             // Only warn if the user didn't set it at all
             if (inAppFramesOption == null) {
-                logger.warn("No '" + IN_APP_FRAMES_OPTION + "' was configured, this option is highly recommended "
-                    + "as it affects stacktrace grouping and display on Sentry. See documentation: "
-                    + "https://docs.sentry.io/clients/java/config/#in-application-stack-frames");
             }
             return Collections.emptyList();
         }
@@ -784,8 +773,6 @@ public class DefaultSentryClientFactory extends SentryClientFactory {
         if (Util.isNullOrEmpty(val)) {
             val = Lookup.lookup(EXTRATAGS_OPTION, dsn);
             if (!Util.isNullOrEmpty(val)) {
-                logger.warn("The '" + EXTRATAGS_OPTION + "' option is deprecated, please use"
-                    + " the '" + MDCTAGS_OPTION + "' option instead.");
             }
         }
 

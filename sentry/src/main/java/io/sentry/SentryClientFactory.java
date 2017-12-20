@@ -3,15 +3,11 @@ package io.sentry;
 import io.sentry.config.Lookup;
 import io.sentry.dsn.Dsn;
 import io.sentry.util.Util;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Factory in charge of creating {@link SentryClient} instances.
  */
 public abstract class SentryClientFactory {
-    private static final Logger logger = LoggerFactory.getLogger(SentryClientFactory.class);
-
     /**
      * Creates an instance of Sentry by discovering the DSN.
      *
@@ -54,8 +50,6 @@ public abstract class SentryClientFactory {
                     factoryClass = (Class<? extends SentryClientFactory>) Class.forName(sentryClientFactoryName);
                     sentryClientFactory = factoryClass.newInstance();
                 } catch (ClassNotFoundException | IllegalAccessException | InstantiationException e) {
-                    logger.error("Error creating SentryClient using factory class: '"
-                        + sentryClientFactoryName + "'.", e);
                     return null;
                 }
             }
@@ -72,7 +66,6 @@ public abstract class SentryClientFactory {
 
             return new Dsn(dsn);
         } catch (Exception e) {
-            logger.error("Error creating valid DSN from: '{}'.", dsn, e);
             throw e;
         }
     }

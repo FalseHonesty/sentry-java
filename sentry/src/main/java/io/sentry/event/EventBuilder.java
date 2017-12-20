@@ -3,8 +3,6 @@ package io.sentry.event;
 import io.sentry.environment.SentryEnvironment;
 import io.sentry.event.interfaces.SentryInterface;
 import io.sentry.event.interfaces.SentryStackTraceElement;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.net.InetAddress;
 import java.nio.charset.Charset;
@@ -475,7 +473,6 @@ public class EventBuilder {
          * Time before the get hostname operation times out (in ms).
          */
         public static final long GET_HOSTNAME_TIMEOUT = TimeUnit.SECONDS.toMillis(1);
-        private static final Logger logger = LoggerFactory.getLogger(HostnameCache.class);
         /**
          * Time for which the cache is kept.
          */
@@ -537,16 +534,11 @@ public class EventBuilder {
             };
 
             try {
-                logger.debug("Updating the hostname cache");
                 FutureTask<Void> futureTask = new FutureTask<>(hostRetriever);
                 new Thread(futureTask).start();
                 futureTask.get(GET_HOSTNAME_TIMEOUT, TimeUnit.MILLISECONDS);
             } catch (Exception e) {
                 expirationTimestamp = System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(1);
-                logger.debug("Localhost hostname lookup failed, keeping the value '{}'."
-                    + " If this persists it may mean your DNS is incorrectly configured and"
-                    + " you may want to hardcode your server name: https://docs.sentry.io/clients/java/config/",
-                    hostname, e);
             }
         }
     }

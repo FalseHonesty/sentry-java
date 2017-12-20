@@ -1,8 +1,6 @@
 package io.sentry.dsn;
 
 import io.sentry.config.Lookup;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
@@ -18,7 +16,6 @@ public class Dsn {
      * Default DSN to use when auto detection fails.
      */
     public static final String DEFAULT_DSN = "noop://localhost?async=false";
-    private static final Logger logger = LoggerFactory.getLogger(Dsn.class);
     private String secretKey;
     private String publicKey;
     private String projectId;
@@ -85,8 +82,6 @@ public class Dsn {
         }
 
         if (dsn == null) {
-            logger.warn("*** Couldn't find a suitable DSN, Sentry operations will do nothing!"
-                + " See documentation: https://docs.sentry.io/clients/java/ ***");
             dsn = DEFAULT_DSN;
         }
 
